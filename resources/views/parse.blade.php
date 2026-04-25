@@ -63,8 +63,22 @@
 
     <h1>Parsing the Reflections (Prototype)</h1>
 
-    <p><strong>Files Created:</strong> {{ $createdCount }}</p>
-    <p><strong>Files Skipped:</strong> {{ $skippedCount }}</p>
+
+    <h2>Files Created: {{ $createdCount }}</h2>
+
+    <ul>
+    @foreach ($createdFiles as $file)
+        <li>{{ $file['title'] }} — {{ $file['filename'] }}</li>
+    @endforeach
+    </ul>
+
+    <h2>Files Skipped: {{ $skippedCount }}</h2>
+
+    <ul>
+    @foreach ($skippedFiles as $file)
+        <li>{{ $file['title'] }} — {{ $file['filename'] }} ({{ $file['reason'] }})</li>
+    @endforeach
+    </ul>
 
     @php
         $grouped = collect($results)->groupBy('scripture_reference');

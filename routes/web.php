@@ -7,7 +7,7 @@ use PhpOffice\PhpWord\IOFactory;
 
 Route::get('/parse', function () {
 
-    $url = 'https://www.touchstonemag.com/daily_reflections/2007/04/13/april-13-april/';
+    $url = 'https://www.touchstonemag.com/daily_reflections/2007/04/27/april-27-may-4/';
         // https://www.touchstonemag.com/daily_reflections/2007/04/13/april-13-april/
         // https://www.touchstonemag.com/daily_reflections/2007/04/20/april-20-april/
         // https://www.touchstonemag.com/daily_reflections/2007/04/27/april-27-may-4/
@@ -373,6 +373,9 @@ Route::get('/parse', function () {
     $createdCount = 0;
     $skippedCount = 0;
 
+    $createdFiles = [];
+    $skippedFiles = [];
+
     foreach ($results as $entry) {
         $folderPath = $outputBasePath
         . DIRECTORY_SEPARATOR . $sanitize($entry['category'])
@@ -413,22 +416,40 @@ Route::get('/parse', function () {
         . $entry['filename'] . '.docx';
 
         // Skip if file already exists and add to counter
-        if (file_exists($filePath)) {
-            $skippedCount++;
-            continue;
-        }
+if (file_exists($filePath)) {
+    $skippedCount++;
 
-        // Save file
-        $writer = IOFactory::createWriter($phpWord, 'Word2007');
-        $writer->save($filePath);
-        $createdCount++;
+    $skippedFiles[] = [
+        'title' => $entry['scripture_reference'],
+        'filename' => $entry['filename'] . '.docx',
+        'path' => $filePath,
+        'reason' => 'already exists',
+    ];
+
+        continue;
+    }
+
+    // Save file
+    $writer = IOFactory::createWriter($phpWord, 'Word2007');
+    $writer->save($filePath);
+    $createdCount++;
+
+    $createdFiles[] = [
+        'title' => $entry['scripture_reference'],
+        'filename' => $entry['filename'] . '.docx',
+        'path' => $filePath,
+    ];
 
     
     }
 
+    return view('parse', compact(
+        'results',
+        'url',
+        'createdCount',
+        'skippedCount',
+        'createdFiles',
+        'skippedFiles'
+    ));
 
-
-
-
-    return view('parse', compact('results', 'url', 'createdCount', 'skippedCount'));
 });
