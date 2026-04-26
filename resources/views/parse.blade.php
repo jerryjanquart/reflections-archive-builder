@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Reflections Finder</title>
+    <title>Reflections Archive Builder</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -61,7 +61,7 @@
 </head>
 <body>
 
-    <h1>Parsing the Reflections (Prototype)</h1>
+    <h1>Reflections Archive Builder</h1>
 
 
     <h2>Files Created: {{ $createdCount }}</h2>
