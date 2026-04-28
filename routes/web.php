@@ -7,7 +7,7 @@ use PhpOffice\PhpWord\IOFactory;
 
 Route::get('/parse', function () {
 
-    $url = 'https://www.touchstonemag.com/daily_reflections/2007/10/22/october-19th/';
+    $url = 'https://www.touchstonemag.com/daily_reflections/2007/04/13/april-13-april';
         // https://www.touchstonemag.com/daily_reflections/2007/04/13/april-13-april/
         // https://www.touchstonemag.com/daily_reflections/2007/04/20/april-20-april/
         // https://www.touchstonemag.com/daily_reflections/2007/04/27/april-27-may-4/
