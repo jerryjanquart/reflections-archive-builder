@@ -414,6 +414,8 @@ Route::get('/parse', function () {
         // Add spacing
         $section->addTextBreak(1);
 
+        // Append footer: source URL + generated date
+
         // Source URL
         $section->addLink(
             $url,
