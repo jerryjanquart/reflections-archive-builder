@@ -6,13 +6,8 @@ use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\IOFactory;
 use App\Models\ReflectionsSource;
 
-Route::get('/parse', function () {
-
-    $url = 'https://www.touchstonemag.com/daily_reflections/2007/04/13/april-13-april';
-        // https://www.touchstonemag.com/daily_reflections/2007/04/13/april-13-april/
-        // https://www.touchstonemag.com/daily_reflections/2007/04/20/april-20-april/
-        // https://www.touchstonemag.com/daily_reflections/2007/04/27/april-27-may-4/
-        // https://www.touchstonemag.com/daily_reflections/2007/10/22/october-19th/
+function processReflectionUrl($url)
+{
 
     $chapterCounts = [
         'Matthew' => 28,
@@ -462,23 +457,78 @@ if (file_exists($filePath)) {
     
     }
 
-    return view('parse', compact(
-        'results',
-        'url',
-        'createdCount',
-        'skippedCount',
-        'createdFiles',
-        'skippedFiles'
-    ));
+    return [
+    'results' => $results,
+    'url' => $url,
+    'createdCount' => $createdCount,
+    'skippedCount' => $skippedCount,
+    'createdFiles' => $createdFiles,
+    'skippedFiles' => $skippedFiles,
+];
+}
 
+Route::get('/parse', function () {
+    $url = 'https://www.touchstonemag.com/daily_reflections/2007/10/22/october-19th/';
+
+    $report = processReflectionUrl($url);
+
+    return view('parse', $report);
 });
 
 
 
 
 
+Route::get('/process-next-reflection-sources', function () {
+    $sources = ReflectionsSource::where('status', 'imported')
+        ->orderBy('post_date')
+        ->limit(10)
+        ->get();
 
+    $batchReports = [];
 
+    foreach ($sources as $source) {
+        try {
+            $report = processReflectionUrl($source->url);
+
+            $createdCount = $report['createdCount'] ?? 0;
+            $skippedCount = $report['skippedCount'] ?? 0;
+
+            $source->update([
+                'status' => $createdCount > 0 ? 'processed' : 'skipped',
+                'files_created' => $createdCount,
+                'error_message' => null,
+                'processed_at' => now(),
+            ]);
+
+            $batchReports[] = [
+                'url' => $source->url,
+                'title' => $source->title,
+                'status' => $createdCount > 0 ? 'processed' : 'skipped',
+                'createdCount' => $createdCount,
+                'skippedCount' => $skippedCount,
+                'error' => null,
+            ];
+        } catch (\Throwable $e) {
+            $source->update([
+                'status' => 'failed',
+                'error_message' => $e->getMessage(),
+                'processed_at' => now(),
+            ]);
+
+            $batchReports[] = [
+                'url' => $source->url,
+                'title' => $source->title,
+                'status' => 'failed',
+                'createdCount' => 0,
+                'skippedCount' => 0,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    return view('process-next-reflection-sources', compact('batchReports'));
+});
 
 
 
