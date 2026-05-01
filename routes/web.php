@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\IOFactory;
-use App\Models\ReflectionsSource;
+use App\Models\ReflectionSource;
 
 function processReflectionUrl($url)
 {
@@ -480,7 +480,7 @@ Route::get('/parse', function () {
 
 
 Route::get('/process-next-reflection-sources', function () {
-    $sources = ReflectionsSource::where('status', 'imported')
+    $sources = ReflectionSource::where('status', 'imported')
         ->orderBy('post_date')
         ->limit(10)
         ->get();
@@ -569,7 +569,7 @@ Route::get('/import-reflection-sources', function () {
         $posts = $response->json();
 
         foreach ($posts as $post) {
-            $source = ReflectionsSource::firstOrCreate(
+            $source = ReflectionSource::firstOrCreate(
                 ['url' => $post['link']],
                 [
                     'title' => html_entity_decode(strip_tags($post['title']['rendered'] ?? '')),
@@ -616,14 +616,14 @@ Route::get('/import-reflection-sources', function () {
 
 
 Route::get('/reflection-sources-status', function () {
-    $total = ReflectionsSource::count();
-    $imported = ReflectionsSource::where('status', 'imported')->count();
-    $processed = ReflectionsSource::where('status', 'processed')->count();
-    $skipped = ReflectionsSource::where('status', 'skipped')->count();
-    $failed = ReflectionsSource::where('status', 'failed')->count();
-    $needsReview = ReflectionsSource::where('status', 'needs_review')->count();
+    $total = ReflectionSource::count();
+    $imported = ReflectionSource::where('status', 'imported')->count();
+    $processed = ReflectionSource::where('status', 'processed')->count();
+    $skipped = ReflectionSource::where('status', 'skipped')->count();
+    $failed = ReflectionSource::where('status', 'failed')->count();
+    $needsReview = ReflectionSource::where('status', 'needs_review')->count();
 
-    $nextSources = ReflectionsSource::where('status', 'imported')
+    $nextSources = ReflectionSource::where('status', 'imported')
         ->orderBy('post_date')
         ->limit(10)
         ->get();
