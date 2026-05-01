@@ -565,3 +565,26 @@ Route::get('/import-reflection-sources', function () {
 
 
 
+Route::get('/reflection-sources-status', function () {
+    $total = ReflectionsSource::count();
+    $imported = ReflectionsSource::where('status', 'imported')->count();
+    $processed = ReflectionsSource::where('status', 'processed')->count();
+    $skipped = ReflectionsSource::where('status', 'skipped')->count();
+    $failed = ReflectionsSource::where('status', 'failed')->count();
+    $needsReview = ReflectionsSource::where('status', 'needs_review')->count();
+
+    $nextSources = ReflectionsSource::where('status', 'imported')
+        ->orderBy('post_date')
+        ->limit(10)
+        ->get();
+
+    return view('reflection-sources-status', compact(
+        'total',
+        'imported',
+        'processed',
+        'skipped',
+        'failed',
+        'needsReview',
+        'nextSources'
+    ));
+});
