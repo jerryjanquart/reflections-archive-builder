@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\IOFactory;
+use App\Models\ReflectionsSource;
 
 Route::get('/parse', function () {
 
@@ -471,3 +472,96 @@ if (file_exists($filePath)) {
     ));
 
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Route::get('/import-reflection-sources', function () {
+    $page = 1;
+    $imported = 0;
+    $skipped = 0;
+
+    do {
+        $response = Http::get('https://www.touchstonemag.com/daily_reflections/wp-json/wp/v2/posts', [
+            'per_page' => 100,
+            'orderby' => 'date',
+            'order' => 'asc',
+            'page' => $page,
+        ]);
+
+        if (! $response->successful()) {
+            break;
+        }
+
+        $posts = $response->json();
+
+        foreach ($posts as $post) {
+            $source = ReflectionsSource::firstOrCreate(
+                ['url' => $post['link']],
+                [
+                    'title' => html_entity_decode(strip_tags($post['title']['rendered'] ?? '')),
+                    'post_date' => $post['date'] ?? null,
+                    'status' => 'imported',
+                ]
+            );
+
+            if ($source->wasRecentlyCreated) {
+                $imported++;
+            } else {
+                $skipped++;
+            }
+        }
+
+        $page++;
+    } while (! empty($posts));
+
+    return "Import complete. Imported: {$imported}. Skipped existing: {$skipped}.";
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
