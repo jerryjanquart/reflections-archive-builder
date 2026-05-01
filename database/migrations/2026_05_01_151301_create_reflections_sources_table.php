@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('reflections_sources', function (Blueprint $table) {
+        Schema::create('reflection_sources', function (Blueprint $table) {
             $table->id();
             $table->string('title')->nullable();
             $table->string('url')->unique();
