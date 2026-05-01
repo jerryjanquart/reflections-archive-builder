@@ -75,6 +75,22 @@
         </div>
     </div>
 
+    <form method="POST" action="/process-next-reflection-sources" style="margin: 24px 0;">
+    @csrf
+
+        <button type="submit" style="
+            background: #1f2937;
+            color: white;
+            border: 0;
+            padding: 12px 18px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        ">
+            Process Next 10
+        </button>
+    </form>
+
     <hr>
 
     <h2>Next 10 URLs to Process</h2>

@@ -479,7 +479,7 @@ Route::get('/parse', function () {
 
 
 
-Route::get('/process-next-reflection-sources', function () {
+Route::post('/process-next-reflection-sources', function () {
     $sources = ReflectionSource::where('status', 'imported')
         ->orderBy('post_date')
         ->limit(10)
