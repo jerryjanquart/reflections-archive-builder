@@ -12,8 +12,18 @@ use App\Http\Controllers\ReflectionSourceController;
 
 Route::get('/parse', function () {
     
-    $url = 'https://www.touchstonemag.com/daily_reflections/2007/04/13/april-13-april';
-    $report = app(ReflectionParserService::class)->processUrl($url);
+    $source = ReflectionSource::where('status', 'imported')
+        ->orderBy('post_date')
+        ->first();
+
+    if (! $source) {
+        return 'No more imported sources.';
+    }
+
+    $url = $source->url;
+
+    $report = app(ReflectionParserService::class)
+        ->processUrl($url);
 
     return view('parse', $report);
 
