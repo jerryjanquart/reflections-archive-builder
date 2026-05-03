@@ -5,10 +5,12 @@
     <title>Process Next Reflection Sources</title>
     <style>
         body {
+            
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             max-width: 1000px;
             margin: 40px auto;
             line-height: 1.5;
+            background: #faf9f7;
         }
 
         .item {

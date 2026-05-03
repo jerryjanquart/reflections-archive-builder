@@ -9,6 +9,7 @@
             max-width: 900px;
             margin: 40px auto;
             line-height: 1.5;
+            background: #faf9f7;
         }
 
         .stats {
@@ -75,21 +76,45 @@
         </div>
     </div>
 
-    <form method="POST" action="/process-next-reflection-sources" style="margin: 24px 0;">
-    @csrf
+    
 
-        <button type="submit" style="
-            background: #1f2937;
+    <div style="display: flex; gap: 12px; margin: 24px 0;">
+
+        <form method="POST" action="/process-next-reflection-sources">
+            @csrf
+            <button type="submit" style="
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: #1f2937;
+                color: white;
+                border: 0;
+                padding: 12px 18px;
+                border-radius: 6px;
+                font-size: 16px;
+                cursor: pointer;
+                height: 44px;
+            ">
+                Process & Update Next 10
+            </button>
+        </form>
+
+        <a href="/parse" style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #4b5563;
             color: white;
-            border: 0;
+            text-decoration: none;
             padding: 12px 18px;
             border-radius: 6px;
             font-size: 16px;
-            cursor: pointer;
+            height: 21px;
         ">
-            Process Next 10
-        </button>
-    </form>
+            Process Next (No Update)
+        </a>
+
+    </div>
 
     <hr>
 

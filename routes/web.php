@@ -29,6 +29,8 @@ Route::get('/parse', function () {
 
 });
 
+Route::get('/', [ReflectionSourceController::class, 'status']);
+
 Route::get('/reflection-sources-status', [ReflectionSourceController::class, 'status']);
 
 Route::post('/process-next-reflection-sources', [ReflectionSourceController::class, 'processNext']);
