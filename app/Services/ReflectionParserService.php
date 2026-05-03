@@ -6,224 +6,241 @@ use Carbon\Carbon;
 use DOMDocument;
 use DOMXPath;
 use Illuminate\Support\Facades\Http;
-use PhpOffice\PhpWord\IOFactory;
-use PhpOffice\PhpWord\PhpWord;
-use App\Services\ReflectionDocxExportService;
 
 class ReflectionParserService
 {
     public function processUrl(string $url): array
     {
-        
-    $chapterCounts = config('bible.chapter_counts');
-    $categoryMap = config('bible.category_map');
-    $bookAbbrev = config('bible.book_abbrev');
+        // --------------------------------------------------
+        // SETUP: Bible maps, book names, and parser patterns
+        // --------------------------------------------------
 
-    $bookNames = array_unique(array_merge(
-    array_keys($chapterCounts),
-    array_keys($categoryMap),
-        ['Psalm', 'Psalms', 'Song of Solomon']
-    ));
+        $chapterCounts = config('bible.chapter_counts');
+        $categoryMap = config('bible.category_map');
+        $bookAbbrev = config('bible.book_abbrev');
 
-    // Longest first so "Song of Solomon" matches before "Song"
-    usort($bookNames, fn($a, $b) => strlen($b) <=> strlen($a));
+        $bookNames = array_unique(array_merge(
+            array_keys($chapterCounts),
+            array_keys($categoryMap),
+            ['Psalm', 'Psalms', 'Song of Solomon']
+        ));
 
-    $bookPattern = implode('|', array_map(fn($book) => preg_quote($book, '/'), $bookNames));
+        // Longest first so "Song of Solomon" matches before "Song"
+        usort($bookNames, fn($a, $b) => strlen($b) <=> strlen($a));
 
-    $reflectionStartPattern = '/^(' . $bookPattern . ')\s+(\d+)(?::([\d\-–]+))?(?:\s*\([^)]*\))?(?::\s*(.*))?$/';
+        $bookPattern = implode('|', array_map(fn($book) => preg_quote($book, '/'), $bookNames));
 
-    $specialBookPattern = '/^The Book of ([A-Za-z]+(?:\s+[A-Za-z]+)*):\s*(.*)$/';
+        $reflectionStartPattern = '/^(' . $bookPattern . ')\s+(\d+)(?::([\d\-–]+))?(?:\s*\([^)]*\))?(?::\s*(.*))?$/';
 
-    preg_match('/daily_reflections\/(\d{4})\//', $url, $yearMatch);
-    $year = $yearMatch[1] ?? null;
+        $specialBookPattern = '/^The Book of ([A-Za-z]+(?:\s+[A-Za-z]+)*):\s*(.*)$/';
 
-    $html = Http::get($url)->body();
+        preg_match('/daily_reflections\/(\d{4})\//', $url, $yearMatch);
+        $year = $yearMatch[1] ?? null;
 
-    libxml_use_internal_errors(true);
+        // --------------------------------------------------
+        // FETCH + NORMALIZE: Get post HTML and convert to text
+        // --------------------------------------------------
 
-    $dom = new DOMDocument();
-    $dom->loadHTML($html);
-    $xpath = new DOMXPath($dom);
+        $html = Http::get($url)->body();
 
-    // Try to grab the main article content only
-    $nodes = $xpath->query("//*[contains(@class, 'entry-content') or contains(@class, 'post-content') or contains(@class, 'td-post-content')]");
+        libxml_use_internal_errors(true);
 
-    $contentHtml = '';
+        $dom = new DOMDocument();
+        $dom->loadHTML($html);
+        $xpath = new DOMXPath($dom);
 
-    if ($nodes->length > 0) {
-        $node = $nodes->item(0);
+        // Try to grab the main article content only
+        $nodes = $xpath->query("//*[contains(@class, 'entry-content') or contains(@class, 'post-content') or contains(@class, 'td-post-content')]");
 
-        foreach ($node->childNodes as $child) {
-            $contentHtml .= $dom->saveHTML($child);
-        }
-    } else {
-        // fallback: use full html if no main content wrapper is found
-        $contentHtml = $html;
-    }
+        $contentHtml = '';
 
-    // Preserve paragraph-ish structure BEFORE stripping tags
-    $contentHtml = preg_replace('/<\s*br\s*\/?\s*>/i', "\n", $contentHtml);
-    $contentHtml = preg_replace('/<\s*\/p\s*>/i', "\n\n", $contentHtml);
-    $contentHtml = preg_replace('/<\s*\/div\s*>/i', "\n\n", $contentHtml);
-    $contentHtml = preg_replace('/<\s*\/h[1-6]\s*>/i', "\n\n", $contentHtml);
-    $contentHtml = preg_replace('/<\s*li\s*>/i', "\n- ", $contentHtml);
-    $contentHtml = preg_replace('/<\s*\/li\s*>/i', "\n", $contentHtml);
+        if ($nodes->length > 0) {
+            $node = $nodes->item(0);
 
-    // Preserve italics before stripping tags
-    $contentHtml = preg_replace('/<(em|i)>(.*?)<\/\1>/is', '<i>$2</i>', $contentHtml);
-    
-    $text = html_entity_decode(strip_tags($contentHtml, '<i>'));
-    $text = preg_replace("/\n{3,}/", "\n\n", $text);
-    $text = trim($text);
-
-    preg_match_all(
-        '/((Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),\s+[A-Za-z]+\s+\d+)(.*?)(?=(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),\s+[A-Za-z]+\s+\d+|$)/s',
-        $text,
-        $matches,
-        PREG_SET_ORDER
-    );
-
-    $results = [];
-
-    foreach ($matches as $match) {
-        $dayLabel = trim($match[1]);
-        $body = trim($match[3]);
-
-        $lines = preg_split('/\R+/', $body);
-        $lines = array_values(array_filter(array_map('trim', $lines)));
-
-        if (count($lines) === 0) {
-            continue;
-        }
-
-        // Split one day into one or more reflection chunks
-        $reflectionChunks = [];
-        $currentChunk = [];
-
-        foreach ($lines as $line) {
-            $isReflectionStart =
-                preg_match($reflectionStartPattern, $line)
-                || preg_match($specialBookPattern, $line);
-
-            if ($isReflectionStart) {
-                if (!empty($currentChunk)) {
-                    $reflectionChunks[] = $currentChunk;
-                }
-                $currentChunk = [$line];
-            } else {
-                $currentChunk[] = $line;
+            foreach ($node->childNodes as $child) {
+                $contentHtml .= $dom->saveHTML($child);
             }
+        } else {
+            // Fallback: use full HTML if no main content wrapper is found
+            $contentHtml = $html;
         }
 
-        if (!empty($currentChunk)) {
-            $reflectionChunks[] = $currentChunk;
-        }
+        // Preserve paragraph-ish structure BEFORE stripping tags
+        $contentHtml = preg_replace('/<\s*br\s*\/?\s*>/i', "\n", $contentHtml);
+        $contentHtml = preg_replace('/<\s*\/p\s*>/i', "\n\n", $contentHtml);
+        $contentHtml = preg_replace('/<\s*\/div\s*>/i', "\n\n", $contentHtml);
+        $contentHtml = preg_replace('/<\s*\/h[1-6]\s*>/i', "\n\n", $contentHtml);
+        $contentHtml = preg_replace('/<\s*li\s*>/i', "\n- ", $contentHtml);
+        $contentHtml = preg_replace('/<\s*\/li\s*>/i', "\n", $contentHtml);
 
-        // Process each reflection chunk separately
-        foreach ($reflectionChunks as $chunk) {
-            if (count($chunk) === 0) {
+        // Preserve italics before stripping tags
+        $contentHtml = preg_replace('/<(em|i)>(.*?)<\/\1>/is', '<i>$2</i>', $contentHtml);
+
+        $text = html_entity_decode(strip_tags($contentHtml, '<i>'));
+        $text = preg_replace("/\n{3,}/", "\n\n", $text);
+        $text = trim($text);
+
+        // --------------------------------------------------
+        // SPLIT: Break weekly post into daily sections
+        // --------------------------------------------------
+
+        preg_match_all(
+            '/((Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),\s+[A-Za-z]+\s+\d+)(.*?)(?=(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),\s+[A-Za-z]+\s+\d+|$)/s',
+            $text,
+            $matches,
+            PREG_SET_ORDER
+        );
+
+        $results = [];
+
+        foreach ($matches as $match) {
+            $dayLabel = trim($match[1]);
+            $body = trim($match[3]);
+
+            $lines = preg_split('/\R+/', $body);
+            $lines = array_values(array_filter(array_map('trim', $lines)));
+
+            if (count($lines) === 0) {
                 continue;
             }
 
-            $titleLine = $chunk[0];
+            // --------------------------------------------------
+            // CHUNK: Split one day into one or more reflections
+            // --------------------------------------------------
 
-            $book = null;
-            $chapter = null;
-            $verses = null;
-            $scriptureReference = null;
-            $firstLineRemainder = '';
+            $reflectionChunks = [];
+            $currentChunk = [];
 
-            if (preg_match($reflectionStartPattern, $titleLine, $m)) {
-                $book = trim($m[1]);
-                $chapter = (int) $m[2];
-                $verses = $m[3] ?? null;
+            foreach ($lines as $line) {
+                $isReflectionStart =
+                    preg_match($reflectionStartPattern, $line)
+                    || preg_match($specialBookPattern, $line);
 
-                $scriptureReference = $verses
-                    ? "{$book} {$chapter}:{$verses}"
-                    : "{$book} {$chapter}";
+                if ($isReflectionStart) {
+                    if (! empty($currentChunk)) {
+                        $reflectionChunks[] = $currentChunk;
+                    }
 
-                $firstLineRemainder = trim($m[4] ?? '');
-            } elseif (preg_match($specialBookPattern, $titleLine, $m)) {
-                $book = trim($m[1]);
+                    $currentChunk = [$line];
+                } else {
+                    $currentChunk[] = $line;
+                }
+            }
+
+            if (! empty($currentChunk)) {
+                $reflectionChunks[] = $currentChunk;
+            }
+
+            // --------------------------------------------------
+            // PARSE: Convert reflection chunks into structured entries
+            // --------------------------------------------------
+
+            foreach ($reflectionChunks as $chunk) {
+                if (count($chunk) === 0) {
+                    continue;
+                }
+
+                $titleLine = $chunk[0];
+
+                $book = null;
                 $chapter = null;
                 $verses = null;
-                $scriptureReference = "The Book of {$book}";
-                $firstLineRemainder = trim($m[2] ?? '');
-            } else {
-                continue;
+                $scriptureReference = null;
+                $firstLineRemainder = '';
+
+                if (preg_match($reflectionStartPattern, $titleLine, $m)) {
+                    $book = trim($m[1]);
+                    $chapter = (int) $m[2];
+                    $verses = $m[3] ?? null;
+
+                    $scriptureReference = $verses
+                        ? "{$book} {$chapter}:{$verses}"
+                        : "{$book} {$chapter}";
+
+                    $firstLineRemainder = trim($m[4] ?? '');
+                } elseif (preg_match($specialBookPattern, $titleLine, $m)) {
+                    $book = trim($m[1]);
+                    $chapter = null;
+                    $verses = null;
+                    $scriptureReference = "The Book of {$book}";
+                    $firstLineRemainder = trim($m[2] ?? '');
+                } else {
+                    continue;
+                }
+
+                $contentLines = $chunk;
+                array_shift($contentLines);
+
+                $content = trim(
+                    ($firstLineRemainder ? $firstLineRemainder . "\n\n" : '') .
+                    implode("\n\n", $contentLines)
+                );
+
+                // Remove duplicate leading verse range, e.g. "1-17 The Christian's new state..."
+                $content = preg_replace('/^\d+[\-–]?\d*\s+/', '', $content);
+
+                // Remove WordPress footer junk
+                $content = preg_replace('/Posted on .*$/s', '', $content);
+
+                // Normalize excessive line breaks again after cleanup
+                $content = preg_replace("/\n{3,}/", "\n\n", $content);
+                $content = trim($content);
+
+                // --------------------------------------------------
+                // METADATA: Build folder, filename, and display data
+                // --------------------------------------------------
+
+                $rangeFolder = null;
+
+                if (isset($chapterCounts[$book])) {
+                    $lastChapter = $chapterCounts[$book];
+                    $rangeFolder = "{$book} 1–{$lastChapter}";
+                }
+
+                $category = $categoryMap[$book] ?? null;
+
+                $parsedDate = Carbon::parse("{$dayLabel}, {$year}");
+                $dateForFilename = $parsedDate->format('m.d.Y');
+
+                $wordCount = str_word_count($content);
+
+                $abbrev = $bookAbbrev[$book] ?? $book;
+                $versesPart = $verses ?: '0';
+
+                $filename = "{$abbrev}{$chapter}.{$versesPart}.{$wordCount}.DR{$dateForFilename}";
+
+                $results[] = [
+                    'day' => $dayLabel,
+                    'year' => $year,
+                    'scripture_reference' => $scriptureReference,
+                    'book' => $book,
+                    'chapter' => $chapter,
+                    'verses' => $verses,
+                    'content' => $content,
+                    'word_count' => $wordCount,
+                    'word_count_formatted' => number_format($wordCount),
+                    'chapter_folder' => $book . ' ' . $chapter,
+                    'range_folder' => $rangeFolder,
+                    'category' => $category,
+                    'filename' => $filename,
+                ];
             }
-
-            $contentLines = $chunk;
-            array_shift($contentLines);
-
-            $content = trim(
-                ($firstLineRemainder ? $firstLineRemainder . "\n\n" : '') .
-                implode("\n\n", $contentLines)
-            );
-
-            // Remove duplicate leading verse range, e.g. "1-17 The Christian's new state..."
-            $content = preg_replace('/^\d+[\-–]?\d*\s+/', '', $content);
-
-            // Remove WordPress footer junk
-            $content = preg_replace('/Posted on .*$/s', '', $content);
-
-            // Normalize excessive line breaks again after cleanup
-            $content = preg_replace("/\n{3,}/", "\n\n", $content);
-            $content = trim($content);
-
-            $rangeFolder = null;
-
-            if (isset($chapterCounts[$book])) {
-                $lastChapter = $chapterCounts[$book];
-                $rangeFolder = "{$book} 1–{$lastChapter}";
-            }
-
-            $category = $categoryMap[$book] ?? null;
-
-            $parsedDate = Carbon::parse("{$dayLabel}, {$year}");
-            $dateForFilename = $parsedDate->format('m.d.Y');
-
-            $wordCount = str_word_count($content);
-
-            $abbrev = $bookAbbrev[$book] ?? $book;
-            $versesPart = $verses ?: '0';
-
-            $filename = "{$abbrev}{$chapter}.{$versesPart}.{$wordCount}.DR{$dateForFilename}";
-
-            $results[] = [
-                'day' => $dayLabel,
-                'year' => $year,
-                'scripture_reference' => $scriptureReference,
-                'book' => $book,
-                'chapter' => $chapter,
-                'verses' => $verses,
-                'content' => $content,
-                'word_count' => $wordCount,
-                'word_count_formatted' => number_format($wordCount),
-                'chapter_folder' => $book . ' ' . $chapter,
-                'range_folder' => $rangeFolder,
-                'category' => $category,
-                'filename' => $filename,
-            ];
         }
+
+        // --------------------------------------------------
+        // EXPORT: Send parsed entries to the Word doc exporter
+        // --------------------------------------------------
+
+        $export = app(ReflectionDocxExportService::class)
+            ->export($results, $url);
+
+        return [
+            'results' => $results,
+            'url' => $url,
+            'createdCount' => $export['createdCount'],
+            'skippedCount' => $export['skippedCount'],
+            'createdFiles' => $export['createdFiles'],
+            'skippedFiles' => $export['skippedFiles'],
+        ];
     }
-
-    $export = app(ReflectionDocxExportService::class)
-    ->export($results, $url);
-
-    $createdCount = $export['createdCount'];
-    $skippedCount = $export['skippedCount'];
-    $createdFiles = $export['createdFiles'];
-    $skippedFiles = $export['skippedFiles'];
-
-    return [
-        'results' => $results,
-        'url' => $url,
-        'createdCount' => $createdCount,
-        'skippedCount' => $skippedCount,
-        'createdFiles' => $createdFiles,
-        'skippedFiles' => $skippedFiles,
-    ];
-    }
-    
 }
