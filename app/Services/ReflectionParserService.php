@@ -15,12 +15,12 @@ class ReflectionParserService
         // PHASES:
         // 1. Setup
         // 2. Fetch + Normalize
-        // 3. Split
-        // 4. Chunk
+        // 3. Split -> break big thing into obvious sections
+        // 4. Chunk -> refine those sections into meaningful units
         // 5. Parse
         // 6. Metadata
         // 7. Export
-        
+
         // --------------------------------------------------
         // SETUP: Bible maps, book names, and parser patterns
         // --------------------------------------------------
