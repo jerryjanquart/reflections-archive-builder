@@ -11,6 +11,16 @@ class ReflectionParserService
 {
     public function processUrl(string $url): array
     {
+
+        // PHASES:
+        // 1. Setup
+        // 2. Fetch + Normalize
+        // 3. Split
+        // 4. Chunk
+        // 5. Parse
+        // 6. Metadata
+        // 7. Export
+        
         // --------------------------------------------------
         // SETUP: Bible maps, book names, and parser patterns
         // --------------------------------------------------
