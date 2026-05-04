@@ -163,20 +163,33 @@ class ReflectionParserService
                     $chapter = (int) $m[2];
                     $verses = $m[3] ?? null;
 
-                    $scriptureReference = $verses
-                        ? "{$book} {$chapter}:{$verses}"
-                        : "{$book} {$chapter}";
-
                     $firstLineRemainder = trim($m[4] ?? '');
                 } elseif (preg_match($specialBookPattern, $titleLine, $m)) {
                     $book = trim($m[1]);
                     $chapter = null;
                     $verses = null;
-                    $scriptureReference = "The Book of {$book}";
                     $firstLineRemainder = trim($m[2] ?? '');
                 } else {
                     continue;
                 }
+
+                // Normalize book title
+                $book = preg_replace('/^(The\s+)?Book\s+of\s+/i', '', $book);
+                $book = preg_replace('/^The\s+/i', '', $book);
+
+                $bookMap = [
+                    'Song of Songs' => 'Song of Solomon',
+                    'Canticles' => 'Song of Solomon',
+                    'Psalm' => 'Psalms',
+                ];
+
+                if (isset($bookMap[$book])) {
+                    $book = $bookMap[$book];
+                }
+
+                $scriptureReference = $chapter
+                    ? ($verses ? "{$book} {$chapter}:{$verses}" : "{$book} {$chapter}")
+                    : "The Book of {$book}";
 
                 $contentLines = $chunk;
                 array_shift($contentLines);
