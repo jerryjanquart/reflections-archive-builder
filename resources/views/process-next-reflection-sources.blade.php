@@ -57,6 +57,10 @@
 
                 <p>
                     <a href="{{ $report['url'] }}" target="_blank">{{ $report['url'] }}</a>
+
+                    <a href="{{ url('/preview-reflection?url=' . urlencode($report['url'])) }}" target="_blank">
+                        🔍 View Parsed Output
+                    </a>
                 </p>
 
                 @if ($report['error'])

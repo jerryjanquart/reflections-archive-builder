@@ -29,9 +29,22 @@ Route::get('/parse', function () {
 
 });
 
-Route::get('/', [ReflectionSourceController::class, 'status']);
+Route::get('/preview-reflection', function () {
 
-Route::get('/reflection-sources-status', [ReflectionSourceController::class, 'status']);
+    $url = request('url');
+
+    if (! $url) {
+        return 'No URL provided.';
+    }
+
+    $report = app(ReflectionParserService::class)
+        ->processUrl($url);
+
+    return view('parse', $report);
+
+});
+
+Route::get('/', [ReflectionSourceController::class, 'status']);
 
 Route::post('/process-next-reflection-sources', [ReflectionSourceController::class, 'processNext']);
 
