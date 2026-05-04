@@ -211,7 +211,7 @@ return [
         'Philippians' => 'Phil',
         'Colossians' => 'Col',
         '1 Thessalonians' => '1Th',
-        '2 Thessalonians ' => '2Th',
+        '2 Thessalonians' => '2Th',
         '1 Timothy' => '1Tm',
         '2 Timothy' => '2Tm',
         'Titus' => 'Ti',

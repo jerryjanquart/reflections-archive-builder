@@ -42,7 +42,7 @@
     @if (empty($batchReports))
         <p>No imported sources waiting to be processed.</p>
     @else
-        <p>Processed {{ count($batchReports) }} source URLs.</p>
+        <p>Processed {{ count($batchReports) }} source URLs. <a href="/">Back to Status</a></p>
 
         @foreach ($batchReports as $report)
             <div class="item {{ $report['status'] }}">
@@ -63,6 +63,39 @@
                     </a>
                 </p>
 
+                @if (! empty($report['createdFiles']))
+                    <h4>Files Created</h4>
+                    <ul>
+                        @foreach ($report['createdFiles'] as $file)
+                            <li>
+                                {{ $file['filename'] ?? $file['path'] ?? json_encode($file) }}
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
+                
+
+                @php
+                    $folders = collect($report['results'] ?? [])
+                        ->map(fn ($r) => implode(' / ', array_filter([
+                            $r['category'] ?? null,
+                            $r['range_folder'] ?? null,
+                            $r['chapter_folder'] ?? null,
+                        ])))
+                        ->filter()
+                        ->unique()
+                        ->sort()
+                        ->values();
+                @endphp
+                @if ($folders->isNotEmpty())
+                    <h4>Folders Created / Used</h4>
+                    <ul>
+                        @foreach ($folders as $folder)
+                            <li>{{ $folder }}</li>
+                        @endforeach
+                    </ul>
+                @endif
+
                 @if ($report['error'])
                     <p><strong>Error:</strong> {{ $report['error'] }}</p>
                 @endif
@@ -71,7 +104,7 @@
     @endif
 
     <p>
-        <a href="/reflection-sources-status">Back to status</a>
+        <a href="/">Back to status</a>
     </p>
 
 </body>

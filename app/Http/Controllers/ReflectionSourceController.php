@@ -108,6 +108,9 @@ class ReflectionSourceController extends Controller
                     'status' => $createdCount > 0 ? 'processed' : 'skipped',
                     'createdCount' => $createdCount,
                     'skippedCount' => $skippedCount,
+                    'createdFiles' => $report['createdFiles'] ?? [],
+                    'skippedFiles' => $report['skippedFiles'] ?? [],
+                    'results' => $report['results'] ?? [],
                     'error' => null,
                 ];
             } catch (\Throwable $e) {

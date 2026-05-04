@@ -177,6 +177,10 @@ class ReflectionParserService
                 $book = preg_replace('/^(The\s+)?Book\s+of\s+/i', '', $book);
                 $book = preg_replace('/^The\s+/i', '', $book);
 
+                $book = preg_replace('/^First\s+/i', '1 ', $book);
+                $book = preg_replace('/^Second\s+/i', '2 ', $book);
+                $book = preg_replace('/^Third\s+/i', '3 ', $book);
+
                 $bookMap = [
                     'Song of Songs' => 'Song of Solomon',
                     'Canticles' => 'Song of Solomon',
