@@ -74,6 +74,24 @@ Route::get('/skipped-reflection-sources', function () {
 });
 
 
+/*
+Route::get('/reset-reflection-sources', function () {
+    \App\Models\ReflectionSource::whereIn('status', [
+        'processed',
+        'skipped',
+        'failed',
+        'needs_review',
+    ])->update([
+        'status' => 'imported',
+        'files_created' => 0,
+        'error_message' => null,
+        'processed_at' => null,
+    ]);
+
+    return 'Reflection sources reset.';
+});
+*/
+
 // ONLY NEEDED TO DO ONCE
 // Route::get('/import-reflection-sources', [ReflectionSourceController::class, 'import']);
 
