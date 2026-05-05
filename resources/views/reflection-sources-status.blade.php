@@ -63,6 +63,7 @@
         <div class="card">
             <div class="number">{{ $skipped }}</div>
             <div>Skipped</div>
+            <a href="/skipped-reflection-sources">View Skipped Sources</a>
         </div>
 
         <div class="card">

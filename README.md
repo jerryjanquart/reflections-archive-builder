@@ -188,3 +188,25 @@ After review, append a status tag to the filename:
 
 Example:
 Lk12.57-59.291.DR10.22.2007 [DONE].docx
+
+### On Skips
+
+If the parser/exporter runs without crashing, but creates 0 files, the whole URL is marked skipped.
+
+- all files already existed
+- parser found no usable reflections
+- exporter skipped every result
+- $results was empty
+- headings didn’t match your parser patterns
+
+### On Failed
+
+If anything throws an exception during processUrl(), the URL is marked failed.
+
+- HTTP timeout
+- DOM/HTML issue
+- Carbon date parsing issue
+- exporter crash
+- missing config mapping
+- filesystem/write error
+- any PHP error/exception

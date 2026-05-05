@@ -1,13 +1,13 @@
-<h1>Failed Reflection Sources: Processing broke</h1>
+<h1>Skipped Reflection Sources: No output created</h1>
 
 <p>
     <a href="/">Back to Status</a>
 </p>
 
-@if ($failedSources->isEmpty())
-    <p>No failed sources. Nice.</p>
+@if ($skippedSources->isEmpty())
+    <p>No skipped sources. Nice.</p>
 @else
-    @foreach ($failedSources as $source)
+    @foreach ($skippedSources as $source)
         <div style="border:1px solid #ddd; border-radius:10px; padding:20px; margin-bottom:20px;">
             <h2>{{ $source->title }}</h2>
 

@@ -61,6 +61,20 @@ Route::get('/failed-reflection-sources', function () {
 
 });
 
+
+Route::get('/skipped-reflection-sources', function () {
+
+    $skippedSources = ReflectionSource::where('status', 'skipped')
+        ->orderBy('post_date')
+        ->get();
+
+    return view('skipped-reflection-sources', [
+        'skippedSources' => $skippedSources,
+    ]);
+
+});
+
+
 // ONLY NEEDED TO DO ONCE
 // Route::get('/import-reflection-sources', [ReflectionSourceController::class, 'import']);
 
