@@ -48,7 +48,20 @@ Route::get('/', [ReflectionSourceController::class, 'status']);
 
 Route::post('/process-next-reflection-sources', [ReflectionSourceController::class, 'processNext']);
 
-Route::get('/import-reflection-sources', [ReflectionSourceController::class, 'import']);
+Route::get('/failed-reflection-sources', function () {
+
+    $failedSources = ReflectionSource::where('status', 'failed')
+        ->orderBy('post_date')
+        ->get();
+
+    return view('failed-reflection-sources', [
+        'failedSources' => $failedSources,
+    ]);
+
+});
+
+// ONLY NEEDED TO DO ONCE
+// Route::get('/import-reflection-sources', [ReflectionSourceController::class, 'import']);
 
 
 

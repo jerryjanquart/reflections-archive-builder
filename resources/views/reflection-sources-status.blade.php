@@ -68,6 +68,7 @@
         <div class="card">
             <div class="number">{{ $failed }}</div>
             <div>Failed</div>
+            <a href="/failed-reflection-sources">View Failed Sources</a>
         </div>
 
         <div class="card">
