@@ -31,6 +31,17 @@ Route::get('/parse', function () {
 
 });
 
+Route::get('/parse-url', function () {
+
+    $url = 'https://www.touchstonemag.com/daily_reflections/2013/01/04/january-4-january-11/';
+
+    $report = app(ReflectionParserService::class)
+        ->processUrl($url);
+
+    return view('parse', $report);
+
+});
+
 Route::get('/preview-reflection', function () {
 
     $url = request('url');

@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use DOMDocument;
 use DOMXPath;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class ReflectionParserService
 {
@@ -190,6 +191,56 @@ class ReflectionParserService
                     $verses = null;
                     $firstLineRemainder = trim($m[2] ?? '');
                 } else {
+
+                    // ---------------------------------------
+                    // TOPIC-BASED FALLBACK (no scripture)
+                    // ---------------------------------------
+
+                    $firstParagraph = implode(' ', $chunk);
+
+                    if (preg_match('/^(.{3,100}?):\s*(.+)$/s', $firstParagraph, $matches)) {
+
+                        $topic = trim($matches[1]);
+                        $openingBody = trim($matches[2]);
+
+                        $remainingLines = array_slice($chunk, 1);
+
+                        $content = trim(
+                            $openingBody . "\n\n" . implode("\n\n", $remainingLines)
+                        );
+
+                        // Clean content (reuse your existing cleanup logic)
+                        $content = preg_replace('/Posted on .*$/s', '', $content);
+                        $content = preg_replace("/\n{3,}/", "\n\n", $content);
+                        $content = trim($content);
+
+                        $parsedDate = Carbon::parse("{$dayLabel}, {$year}");
+                        $dateForFilename = $parsedDate->format('m.d.Y');
+
+                        $wordCount = str_word_count($content);
+
+                        $filename = Str::slug($topic) . ".DR{$dateForFilename}";
+
+                        $results[] = [
+                            'day' => $dayLabel,
+                            'year' => $year,
+                            'scripture_reference' => null,
+                            'book' => 'TOPIC',
+                            'chapter' => null,
+                            'verses' => null,
+                            'content' => $content,
+                            'word_count' => $wordCount,
+                            'word_count_formatted' => number_format($wordCount),
+                            'chapter_folder' => 'biblical-topics',
+                            'range_folder' => 'biblical-topics',
+                            'category' => 'biblical-topics',
+                            'filename' => $filename,
+                        ];
+
+                        continue;
+                    }
+
+                    // If it’s not even topic-based, skip as before
                     continue;
                 }
 
