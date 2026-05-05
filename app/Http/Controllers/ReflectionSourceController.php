@@ -83,7 +83,7 @@ class ReflectionSourceController extends Controller
     {
         $sources = ReflectionSource::where('status', 'imported')
             ->orderBy('post_date')
-            ->limit(10)
+            ->limit(25)
             ->get();
 
         $batchReports = [];

@@ -10,6 +10,7 @@ use App\Services\ReflectionParserService;
 use App\Http\Controllers\ReflectionSourceController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/', [ReflectionSourceController::class, 'status']);
 
 Route::get('/parse', function () {
     
@@ -44,8 +45,6 @@ Route::get('/preview-reflection', function () {
     return view('parse', $report);
 
 });
-
-Route::get('/', [ReflectionSourceController::class, 'status']);
 
 Route::post('/process-next-reflection-sources', [ReflectionSourceController::class, 'processNext']);
 

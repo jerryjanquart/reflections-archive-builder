@@ -97,7 +97,7 @@
                 cursor: pointer;
                 height: 44px;
             ">
-                Process & Update Next 10
+                Process & Update Next 25
             </button>
         </form>
 
