@@ -83,8 +83,28 @@ class ReflectionParserService
         $contentHtml = preg_replace('/<\s*li\s*>/i', "\n- ", $contentHtml);
         $contentHtml = preg_replace('/<\s*\/li\s*>/i', "\n", $contentHtml);
 
-        // Preserve italics before stripping tags
+
+
+
+        // 1. Normalize italics first
         $contentHtml = preg_replace('/<(em|i)>(.*?)<\/\1>/is', '<i>$2</i>', $contentHtml);
+
+        // 2. Then preserve blockquotes
+        $contentHtml = preg_replace_callback(
+            '/<blockquote[^>]*>(.*?)<\/blockquote>/is',
+            function ($matches) {
+                $quote = trim($matches[1]);
+
+                $quote = preg_replace('/<\s*br\s*\/?\s*>/i', "\n", $quote);
+                $quote = preg_replace('/<\s*\/p\s*>/i', "\n\n", $quote);
+
+                // IMPORTANT: allow <i> so italics survive
+                $quote = strip_tags($quote, '<i>');
+
+                return "\n\n[QUOTE]\n{$quote}\n[/QUOTE]\n\n";
+            },
+            $contentHtml
+        );
 
         $text = html_entity_decode(strip_tags($contentHtml, '<i>'));
         $text = preg_replace("/\n{3,}/", "\n\n", $text);
