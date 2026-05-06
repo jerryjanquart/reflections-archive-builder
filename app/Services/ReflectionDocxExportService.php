@@ -37,6 +37,10 @@ class ReflectionDocxExportService
 
             $textRun = $section->addTextRun($paragraphStyle);
 
+            // Defensive cleanup for broken italic tags
+            $text = preg_replace('/<i>(?!.*<\/i>)/is', '', $text);
+            $text = preg_replace('/<\/i>(?!.*<i>)/is', '', $text);
+
             $parts = preg_split('/(<i>.*?<\/i>)/is', $text, -1, PREG_SPLIT_DELIM_CAPTURE);
 
             foreach ($parts as $part) {
@@ -45,9 +49,17 @@ class ReflectionDocxExportService
                 }
 
                 if (preg_match('/^<i>(.*?)<\/i>$/is', $part, $m)) {
-                    $textRun->addText(strip_tags($m[1]), ['italic' => true]);
+                    $cleanItalic = preg_replace('/[^\P{C}\n]+/u', '', strip_tags($m[1]));
+
+                    if ($cleanItalic !== '') {
+                        $textRun->addText($cleanItalic, ['italic' => true]);
+                    }
                 } else {
-                    $textRun->addText(strip_tags($part));
+                    $cleanText = preg_replace('/[^\P{C}\n]+/u', '', strip_tags($part));
+
+                    if ($cleanText !== '') {
+                        $textRun->addText($cleanText);
+                    }
                 }
             }
         };
@@ -73,11 +85,15 @@ class ReflectionDocxExportService
             $phpWord = new PhpWord();
             $section = $phpWord->addSection();
 
-            // Title (scripture reference)
-            $section->addText(
-                $entry['scripture_reference'],
-                ['bold' => true, 'size' => 14]
-            );
+            // Title: topic title if available, otherwise scripture reference
+            $title = $entry['title'] ?? $entry['scripture_reference'] ?? '';
+
+            if ($title !== '') {
+                $section->addText(
+                    $title,
+                    ['bold' => true, 'size' => 14]
+                );
+            }
 
             // Date line
             $section->addText('Posted at Daily Reflections on ' . $entry['day'] . ', ' . $entry['year']);
@@ -154,7 +170,7 @@ class ReflectionDocxExportService
             $createdCount++;
 
             $createdFiles[] = [
-                'title' => $entry['scripture_reference'],
+                'title' => $entry['title'] ?? $entry['scripture_reference'] ?? '',
                 'filename' => $entry['filename'] . '.docx',
                 'path' => $filePath,
             ];

@@ -143,16 +143,18 @@ class ReflectionParserService
             $currentChunk = [];
 
             foreach ($lines as $line) {
+                $cleanLine = trim(strip_tags($line));
+
                 $isReflectionStart =
-                    preg_match($reflectionStartPattern, $line)
-                    || preg_match($specialBookPattern, $line);
+                    preg_match($reflectionStartPattern, $cleanLine)
+                    || preg_match($specialBookPattern, $cleanLine);
 
                 if ($isReflectionStart) {
                     if (! empty($currentChunk)) {
                         $reflectionChunks[] = $currentChunk;
                     }
 
-                    $currentChunk = [$line];
+                    $currentChunk = [$cleanLine];
                 } else {
                     $currentChunk[] = $line;
                 }
@@ -200,7 +202,7 @@ class ReflectionParserService
 
                     if (preg_match('/^(.{3,100}?):\s*(.+)$/s', $firstParagraph, $matches)) {
 
-                        $topic = trim($matches[1]);
+                        $topic = trim(strip_tags($matches[1]));
                         $openingBody = trim($matches[2]);
 
                         $remainingLines = array_slice($chunk, 1);
@@ -222,6 +224,7 @@ class ReflectionParserService
                         $filename = Str::slug($topic) . ".DR{$dateForFilename}";
 
                         $results[] = [
+                            'title' => $topic,
                             'day' => $dayLabel,
                             'year' => $year,
                             'scripture_reference' => null,

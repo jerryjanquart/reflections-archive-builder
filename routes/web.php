@@ -33,7 +33,7 @@ Route::get('/parse', function () {
 
 Route::get('/parse-url', function () {
 
-    $url = 'https://www.touchstonemag.com/daily_reflections/2013/01/04/january-4-january-11/';
+    $url = 'https://www.touchstonemag.com/daily_reflections/2009/01/30/january-30-february-6/';
 
     $report = app(ReflectionParserService::class)
         ->processUrl($url);
