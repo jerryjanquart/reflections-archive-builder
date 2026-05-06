@@ -40,6 +40,8 @@ The project is done when Jerry can process batches of Daily Reflections URLs int
 - 2014: April 1 to to October 15, 2014 (Scott M) 366 - 391
 - 2016: July 1 through October 31, 2016 (Terrell C) 478 - 495
 
+### 890 out of 966 to be processed by the system
+
 use App\Models\ReflectionSource;
 
 $ranges = [

@@ -33,7 +33,36 @@ class ReflectionParserService
         $bookNames = array_unique(array_merge(
             array_keys($chapterCounts),
             array_keys($categoryMap),
-            ['Psalm', 'Psalms', 'Song of Solomon']
+            [
+            'Psalm', 
+            'Psalms', 
+            'Song of Solomon', 
+            
+            'First Samuel',
+            'Second Samuel',
+
+            'First Kings',
+            'Second Kings',
+
+            'First Chronicles',
+            'Second Chronicles',
+
+            'First Corinthians',
+            'Second Corinthians',
+
+            'First Thessalonians',
+            'Second Thessalonians',
+
+            'First Timothy',
+            'Second Timothy',
+
+            'First Peter',
+            'Second Peter',
+
+            'First John',
+            'Second John',
+            'Third John'
+            ]
         ));
 
         // Longest first so "Song of Solomon" matches before "Song"
@@ -259,6 +288,31 @@ class ReflectionParserService
                     'Song of Songs' => 'Song of Solomon',
                     'Canticles' => 'Song of Solomon',
                     'Psalm' => 'Psalms',
+
+                    'First Samuel' => '1 Samuel',
+                    'Second Samuel' => '2 Samuel',
+
+                    'First Kings' => '1 Kings',
+                    'Second Kings' => '2 Kings',
+
+                    'First Chronicles' => '1 Chronicles',
+                    'Second Chronicles' => '2 Chronicles',
+
+                    'First Corinthians' => '1 Corinthians',
+                    'Second Corinthians' => '2 Corinthians',
+
+                    'First Thessalonians' => '1 Thessalonians',
+                    'Second Thessalonians' => '2 Thessalonians',
+
+                    'First Timothy' => '1 Timothy',
+                    'Second Timothy' => '2 Timothy',
+
+                    'First Peter' => '1 Peter',
+                    'Second Peter' => '2 Peter',
+
+                    'First John' => '1 John',
+                    'Second John' => '2 John',
+                    'Third John' => '3 John',
                 ];
 
                 if (isset($bookMap[$book])) {
